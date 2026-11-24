@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!--
+  Aula 03 · 3 — Detectar o controle
+  O QUE FAZ: começa no modo olhar (que sempre funciona) e troca sozinho para o
+  controle quando ele conecta. Se o controle desconectar, volta para o olhar.
+  COMO TESTAR: no PC, o anel aparece e o clique pelo olhar funciona.
+  No Quest, ao entrar em VR com o controle ligado, o anel some e o raio assume.
+  Largue os controles e passe a usar as mãos: o anel volta.
+-->
+<script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+<a-scene>
+  <!-- entrada 1: raio do controle direito -->
+  <a-entity id="mao" laser-controls="hand: right" raycaster="objects: .clicavel"></a-entity>
+  <!-- entrada 2: cursor de olhar preso à câmera -->
+  <a-camera>
+    <a-entity id="olhar" position="0 0 -1"
+      cursor="fuse: true; fuseTimeout: 1500"
+      raycaster="objects: .clicavel"
+      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+      material="color: #2E2640; shader: flat"></a-entity>
+  </a-camera>
+  <a-box class="clicavel" color="#90A5E5" position="0 1.4 -2"></a-box>
+</a-scene>
+<script>
+const mao = document.querySelector('#mao');
+const olhar = document.querySelector('#olhar');
+const caixa = document.querySelector('.clicavel');
+
+// liga ou desliga o modo olhar: esconde o anel E desliga o raio dele
+// (só esconder não basta: o raio invisível continuaria clicando)
+function usarOlhar(ligado) {
+  olhar.setAttribute('visible', ligado);
+  olhar.setAttribute('raycaster', 'enabled', ligado);
+}
+usarOlhar(true); // começa no modo que sempre funciona
+// eventos que o A-Frame dispara quando o controle aparece ou some
+mao.addEventListener('controllerconnected', () => usarOlhar(false));
+mao.addEventListener('controllerdisconnected', () => usarOlhar(true));
+
+// o clique é o mesmo, venha de onde vier
+caixa.addEventListener('click', () => {
+  caixa.setAttribute('color', '#2E2640');
+});
+</script>

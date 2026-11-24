@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+  Aula 03 · 5 — Controle como caneta
+  O QUE FAZ: desenha numa lousa virtual com o controle direito, como uma caneta.
+    O raio toca a lousa, o gatilho liga e desliga o traço, hit.uv dá o ponto
+    e lineTo + stroke desenham. needsUpdate atualiza a textura.
+  COMO TESTAR: no Quest, entre em VR, aponte o raio do controle DIREITO para a
+    lousa preta e segure o gatilho: um traço branco segue o raio. Soltar o
+    gatilho (ou tirar o raio da lousa) levanta a caneta.
+-->
+<script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+<script>
+AFRAME.registerComponent('quadro', {
+  // init: prepara o canvas 2D (a "lousa") e escuta o gatilho da caneta
+  init() {
+    this.ctx = document.querySelector('#tela').getContext('2d');
+    this.ctx.fillRect(0, 0, 512, 320);            // lousa preta
+    this.ctx.strokeStyle = 'white'; this.ctx.lineWidth = 6;  // giz branco, 6 px
+    this.caneta = document.querySelector('#caneta');
+    // gatilho apertado = caneta encostada; solto = caneta no ar
+    this.caneta.addEventListener('triggerdown', () => this.ligada = true);
+    this.caneta.addEventListener('triggerup', () => this.ligada = false);
+  },
+  // tick: a cada frame, vê onde o raio toca a lousa e desenha até lá
+  tick() {
+    // guarda: o raycaster da caneta pode ainda não existir nos primeiros frames
+    if (!this.caneta.components.raycaster) return;
+    // onde o raio da caneta bate nesta lousa (ou null se não bate)
+    const hit = this.caneta.components.raycaster.getIntersection(this.el);
+    // guarda: "|| !hit.uv" só evita erro se o ponto vier sem uv; a lógica é a mesma
+    if (!this.ligada || !hit || !hit.uv) { this.ultimo = null; return; } // caneta no ar
+    // uv vai de 0 a 1 na superfície; o canvas tem 512×320 px e o y é invertido
+    const p = [hit.uv.x * 512, (1 - hit.uv.y) * 320];        // uv → pixel
+    if (this.ultimo) {
+      this.ctx.beginPath(); this.ctx.moveTo(...this.ultimo);
+      this.ctx.lineTo(...p); this.ctx.stroke();               // liga os pontos
+    }
+    this.ultimo = p;  // lembra o ponto para o próximo frame
+    // avisa o three.js que a imagem do canvas mudou e precisa ir de novo para a GPU
+    // guarda: a malha e a textura (map) só existem depois que o material carrega o canvas
+    const mesh = this.el.getObject3D('mesh');
+    if (mesh && mesh.material.map) mesh.material.map.needsUpdate = true;
+  }
+});
+</script>
+<a-scene>
+  <!-- o canvas 2D vira a textura da lousa -->
+  <a-assets><canvas id="tela" width="512" height="320"></canvas></a-assets>
+  <!-- a lousa: plano 1,6 m × 1 m com o canvas como material (flat = sem luz/sombra) -->
+  <a-plane quadro material="src: #tela; shader: flat"
+           position="0 1.5 -1.5" width="1.6" height="1"></a-plane>
+  <!-- a caneta: controle direito com raio que só enxerga a lousa ([quadro]) -->
+  <a-entity id="caneta" laser-controls="hand: right"
+            raycaster="objects: [quadro]"></a-entity>
+</a-scene>

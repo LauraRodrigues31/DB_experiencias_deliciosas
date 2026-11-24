@@ -1,0 +1,20 @@
+<!--
+  Aula 01 · Cena mínima
+  O QUE FAZ: a menor cena A-Frame possível: uma esfera vermelha, um chão e um céu.
+  COMO TESTAR: abra no navegador. Arraste com o mouse para olhar em volta e use WASD
+  para andar. No Quest, toque no botão VR (canto inferior direito).
+-->
+<html>
+<head><script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script></head>
+<body>
+  <!-- a-scene cria tudo: renderizador, câmera padrão (a 1,6 m), luzes e botão de VR -->
+  <a-scene>
+    <!-- esfera: 1,5 m de altura, 3 m à frente (−Z é a frente) -->
+    <a-sphere position="0 1.5 -3" radius="0.3" color="#FF4545"></a-sphere>
+    <!-- chão: plano deitado (girado −90° no eixo X), 10 m × 10 m -->
+    <a-plane rotation="-90 0 0" width="10" height="10" color="#2E2640"></a-plane>
+    <!-- céu: esfera gigante de cor única em volta da cena -->
+    <a-sky color="#E9ECEF"></a-sky>
+  </a-scene>
+</body>
+</html>

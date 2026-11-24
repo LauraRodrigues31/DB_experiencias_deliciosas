@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!--
+  Aula 03 · 0 — Eventos do Quest
+  O QUE FAZ: mostra numa placa de texto, dentro da cena, qual botão do controle
+  direito foi apertado (gatilho ou grip).
+  COMO TESTAR: no Quest, entre em VR e aperte o gatilho (indicador) e o grip
+  (dedo médio) do controle DIREITO. O texto acima da caixa muda.
+  No PC não há controle, então nada acontece. É normal.
+-->
+<script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+<a-scene>
+  <!-- mão direita: laser-controls mostra o modelo do controle e o raio -->
+  <a-entity id="mao-dir" laser-controls="hand: right"
+            raycaster="objects: .clicavel"></a-entity>
+  <a-box class="clicavel" position="0 1.4 -2"></a-box>
+  <!-- placa onde aparece o nome do botão -->
+  <a-text id="placa" value="aperte um botao" align="center"
+          position="0 2.3 -2"></a-text>
+</a-scene>
+<script>
+// pega a mão e a placa pelo id
+const mao = document.querySelector('#mao-dir');
+const placa = document.querySelector('#placa');
+// cada botão do controle dispara eventos "...down" e "...up" na entidade da mão
+mao.addEventListener('triggerdown', () => placa.setAttribute('value', 'gatilho'));
+mao.addEventListener('gripdown', () => placa.setAttribute('value', 'pegar objeto'));
+</script>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+  Aula 03 · 1 — Clique com o controle
+  O QUE FAZ: mira com o raio do controle direito; o gatilho "clica" e a caixa muda de cor.
+  COMO TESTAR: no Quest, entre em VR, aponte o raio para a caixa azul e aperte o
+  gatilho: ela fica roxo-escuro. Recarregue a página para voltar ao azul.
+-->
+<script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+<a-scene>
+  <!-- o raio do controle direito; só "enxerga" objetos com a classe .clicavel -->
+  <a-entity laser-controls="hand: right" raycaster="objects: .clicavel"></a-entity>
+  <a-box class="clicavel" color="#90A5E5" position="0 1.4 -2"></a-box>
+</a-scene>
+<script>
+// laser-controls transforma "raio na caixa + gatilho" num evento "click" na caixa
+const caixa = document.querySelector('.clicavel');
+caixa.addEventListener('click', () => {
+  caixa.setAttribute('color', '#2E2640');
+});
+</script>

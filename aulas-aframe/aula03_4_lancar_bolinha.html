@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--
+  Aula 03 · 4 — Lançar bolinha
+  O QUE FAZ: três entradas diferentes (gatilho do controle, olhar com fuse e barra
+  de espaço no PC) chamam a MESMA função lancar(). A bolinha voa com gravidade
+  e some depois de 3 s.
+  COMO TESTAR:
+    - PC: aperte ESPAÇO para lançar para a frente, ou deixe o anel sobre a caixa por 1,5 s.
+    - Quest: aponte o raio do controle direito para a caixa e aperte o gatilho.
+-->
+<script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+<script>
+AFRAME.registerComponent('lancador', {
+  // velocidade inicial da bolinha (m/s), ajustável no HTML
+  schema: { velocidade: { default: 8 } },
+
+  init() {
+    this.bolas = [];  // bolinhas em voo
+    const alvo = document.querySelector('.alvo');
+    const mao = document.querySelector('#mao');
+    const olhar = document.querySelector('#olhar');
+
+    // A e B: gatilho ou olhar viram "click" no alvo
+    // e.detail.cursorEl = quem clicou (mão ou anel); intersection.point = onde o raio bateu
+    alvo.addEventListener('click', (e) => {
+      const origem = e.detail.cursorEl.object3D.getWorldPosition(new THREE.Vector3());
+      this.lancar(origem, e.detail.intersection.point);
+    });
+    // com controle conectado, o olhar não dispara
+    mao.addEventListener('controllerconnected',
+      () => olhar.setAttribute('raycaster', 'enabled', false));
+    mao.addEventListener('controllerdisconnected',
+      () => olhar.setAttribute('raycaster', 'enabled', true));
+
+    // C: barra de espaço no PC (gatilho provisório)
+    window.addEventListener('keydown', (e) => {
+      if (e.code !== 'Space') return;
+      const cam = document.querySelector('#cam').object3D;
+      const origem = cam.getWorldPosition(new THREE.Vector3());
+      // a câmera olha para −Z, mas getWorldDirection devolve +Z; por isso o "sub"
+      const frente = cam.getWorldDirection(new THREE.Vector3());
+      this.lancar(origem, origem.clone().sub(frente));
+    });
+  },
+
+  // cria uma bolinha na origem com velocidade apontando para o destino
+  lancar(origem, destino) {
+    const bola = document.createElement('a-sphere');
+    bola.setAttribute('radius', 0.08);
+    bola.setAttribute('color', '#2E2640');
+    bola.setAttribute('position', origem);
+    this.el.sceneEl.appendChild(bola);
+    // direção = destino − origem, com tamanho 1 (normalize), vezes a velocidade
+    const vel = destino.clone().sub(origem).normalize()
+      .multiplyScalar(this.data.velocidade);
+    this.bolas.push({ bola, vel, vida: 3 });
+  },
+
+  // física simples a cada frame (dt = ms desde o frame anterior)
+  tick(t, dt) {
+    const s = dt / 1000;              // ms → segundos
+    for (const b of this.bolas) {
+      b.vel.y -= 9.8 * s;             // gravidade
+      b.bola.object3D.position.addScaledVector(b.vel, s);  // posição += vel × tempo
+      b.vida -= s;
+      if (b.vida <= 0) b.bola.remove(); // some após 3 s
+    }
+    this.bolas = this.bolas.filter((b) => b.vida > 0);  // esquece as que já sumiram
+  }
+});
+</script>
+<a-scene>
+  <!-- entrada A: raio do controle -->
+  <a-entity id="mao" laser-controls="hand: right" raycaster="objects: .alvo"></a-entity>
+  <!-- entrada B: olhar com fuse -->
+  <a-camera id="cam">
+    <a-entity id="olhar" position="0 0 -1"
+      cursor="fuse: true; fuseTimeout: 1500"
+      raycaster="objects: .alvo"
+      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+      material="color: #2E2640; shader: flat"></a-entity>
+  </a-camera>
+  <a-box class="alvo" position="0 1.6 -4" color="#90A5E5"></a-box>
+  <!-- entidade vazia que só carrega o componente lancador -->
+  <a-entity lancador="velocidade: 8"></a-entity>
+</a-scene>

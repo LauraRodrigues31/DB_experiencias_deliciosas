@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+  Aula 03 · 6 — Caneta pelo olhar (sem controle)
+  O QUE FAZ: a cabeça vira a caneta. O anel na frente dos olhos é a ponta; olhar
+  para o cubinho azul por 1 s liga ou desliga o traço.
+  O componente "quadro" é o MESMO do arquivo 5, copiado sem mudanças. Os ouvintes
+  de gatilho continuam no código, mas aqui não disparam (não há controle).
+  COMO TESTAR: funciona no PC e no Quest. Olhe para o cubinho à direita por 1 s
+  (liga), depois olhe para a lousa e mexa a cabeça (ou o mouse): o traço segue o
+  anel. Olhe para o cubinho de novo por 1 s para desligar.
+-->
+<script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+<script>
+// ===== componente quadro: cópia exata do arquivo 5 =====
+AFRAME.registerComponent('quadro', {
+  // init: prepara o canvas 2D (a "lousa") e escuta o gatilho da caneta
+  init() {
+    this.ctx = document.querySelector('#tela').getContext('2d');
+    this.ctx.fillRect(0, 0, 512, 320);            // lousa preta
+    this.ctx.strokeStyle = 'white'; this.ctx.lineWidth = 6;  // giz branco, 6 px
+    this.caneta = document.querySelector('#caneta');
+    // gatilho apertado = caneta encostada; solto = caneta no ar
+    this.caneta.addEventListener('triggerdown', () => this.ligada = true);
+    this.caneta.addEventListener('triggerup', () => this.ligada = false);
+  },
+  // tick: a cada frame, vê onde o raio toca a lousa e desenha até lá
+  tick() {
+    // guarda: o raycaster da caneta pode ainda não existir nos primeiros frames
+    if (!this.caneta.components.raycaster) return;
+    // onde o raio da caneta bate nesta lousa (ou null se não bate)
+    const hit = this.caneta.components.raycaster.getIntersection(this.el);
+    // guarda: "|| !hit.uv" só evita erro se o ponto vier sem uv; a lógica é a mesma
+    if (!this.ligada || !hit || !hit.uv) { this.ultimo = null; return; } // caneta no ar
+    // uv vai de 0 a 1 na superfície; o canvas tem 512×320 px e o y é invertido
+    const p = [hit.uv.x * 512, (1 - hit.uv.y) * 320];        // uv → pixel
+    if (this.ultimo) {
+      this.ctx.beginPath(); this.ctx.moveTo(...this.ultimo);
+      this.ctx.lineTo(...p); this.ctx.stroke();               // liga os pontos
+    }
+    this.ultimo = p;  // lembra o ponto para o próximo frame
+    // avisa o three.js que a imagem do canvas mudou e precisa ir de novo para a GPU
+    // guarda: a malha e a textura (map) só existem depois que o material carrega o canvas
+    const mesh = this.el.getObject3D('mesh');
+    if (mesh && mesh.material.map) mesh.material.map.needsUpdate = true;
+  }
+});
+</script>
+<a-scene>
+  <!-- o canvas 2D vira a textura da lousa -->
+  <a-assets><canvas id="tela" width="512" height="320"></canvas></a-assets>
+  <a-plane quadro material="src: #tela; shader: flat"
+           position="0 1.5 -1.5" width="1.6" height="1"></a-plane>
+  <a-camera>
+    <!-- o raio da cabeça passa a ser a #caneta.
+         Ele enxerga a lousa ([quadro]) e o botão (.botao-caneta);
+         fuse de 1 s gera o "click" no botão -->
+    <a-entity id="caneta" position="0 0 -1"
+      cursor="fuse: true; fuseTimeout: 1000"
+      raycaster="objects: [quadro], .botao-caneta"
+      geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.015"
+      material="color: #90A5E5; shader: flat"></a-entity>
+  </a-camera>
+  <!-- botão liga/desliga, à direita da lousa -->
+  <a-box class="botao-caneta" color="#90A5E5"
+         position="1.1 1.5 -1.5" scale="0.2 0.2 0.2"></a-box>
+</a-scene>
+<script>
+// olhar 1 s para o botão liga ou desliga a caneta
+const q = document.querySelector('[quadro]');
+document.querySelector('.botao-caneta').addEventListener('click', () => {
+  // acessa o componente quadro da lousa e inverte o estado "ligada"
+  const c = q.components.quadro;
+  c.ligada = !c.ligada;
+});
+</script>

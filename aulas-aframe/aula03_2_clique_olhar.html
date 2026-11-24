@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!--
+  Aula 03 · 2 — Clique pelo olhar (sem mãos)
+  O QUE FAZ: um anel na frente dos olhos funciona como cursor. Olhar para a caixa
+  por 1,5 s (fuse) gera o mesmo "click", e a caixa muda de cor.
+  COMO TESTAR: funciona no PC e no Quest. No PC, arraste o mouse até o anel ficar
+  sobre a caixa e espere 1,5 s. No Quest, só olhe para a caixa.
+-->
+<script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+<a-scene>
+  <a-camera>
+    <!-- anel na frente dos olhos: é o cursor.
+         Como é filho da câmera, acompanha a cabeça.
+         fuse: true → clica sozinho depois de fuseTimeout ms olhando para o alvo -->
+    <a-entity position="0 0 -1"
+      cursor="fuse: true; fuseTimeout: 1500"
+      raycaster="objects: .clicavel"
+      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+      material="color: #2E2640; shader: flat"></a-entity>
+  </a-camera>
+  <a-box class="clicavel" color="#90A5E5" position="0 1.4 -2"></a-box>
+</a-scene>
+<script>
+// mesmo código do clique com controle: não importa quem gera o "click"
+const caixa = document.querySelector('.clicavel');
+caixa.addEventListener('click', () => {
+  caixa.setAttribute('color', '#2E2640');
+});
+</script>

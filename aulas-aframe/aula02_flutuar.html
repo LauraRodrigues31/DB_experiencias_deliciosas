@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!--
+  Aula 02 · Primeiro componente próprio: flutuar
+  O QUE FAZ: registra o componente "flutuar", que faz a entidade subir e descer
+  suavemente (onda seno) a partir da altura em que ela começou.
+  COMO TESTAR: abra no navegador. As três esferas flutuam com amplitudes e
+  velocidades diferentes. Mude os valores no HTML e recarregue para comparar.
+-->
+<script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+<script>
+// O componente precisa ser registrado ANTES da <a-scene> aparecer no HTML.
+AFRAME.registerComponent('flutuar', {
+  // schema: os parâmetros que dá para passar no HTML, com valores padrão
+  schema: {
+    amplitude: { type: 'number', default: 0.1 },  // quanto sobe e desce (m)
+    velocidade: { type: 'number', default: 1 }    // rapidez da oscilação
+  },
+  // init: roda uma vez quando o componente liga; guarda a altura original
+  init: function () {
+    this.y0 = this.el.object3D.position.y;
+  },
+  // tick: roda a cada frame; time = ms desde que a cena começou
+  tick: function (time) {
+    const t = time / 1000 * this.data.velocidade;  // ms → s, escalado pela velocidade
+    // seno vai de −1 a 1, então a altura oscila entre y0 − amplitude e y0 + amplitude
+    this.el.object3D.position.y = this.y0 + Math.sin(t) * this.data.amplitude;
+  }
+});
+// uso: <a-sphere flutuar="amplitude: 0.2">
+</script>
+<a-scene>
+  <!-- valores padrão: amplitude 0.1, velocidade 1 -->
+  <a-sphere flutuar position="-1 1.5 -3" radius="0.3" color="#FF4545"></a-sphere>
+  <!-- sobe e desce mais -->
+  <a-sphere flutuar="amplitude: 0.2" position="0 1.5 -3" radius="0.3" color="#90A5E5"></a-sphere>
+  <!-- sobe e desce mais, e mais rápido -->
+  <a-sphere flutuar="amplitude: 0.3; velocidade: 3" position="1 1.5 -3" radius="0.3" color="#2E2640"></a-sphere>
+  <a-plane rotation="-90 0 0" width="10" height="10" color="#D4D9DC"></a-plane>
+  <a-sky color="#E9ECEF"></a-sky>
+</a-scene>
